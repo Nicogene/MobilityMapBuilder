@@ -32,6 +32,7 @@
 #include "MobilityScore.h"
 #include "ComputeArea.h"
 #include "dot.h"
+#include "ColormapJet.h"
 
 #include <iostream>
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Ker;
@@ -341,11 +342,11 @@ main(int argc, char** argv)
 			*cloudclusters = (*colored_cloud) + (*planePoints);
 
 			io::savePCDFileASCII("Colored.pcd", *cloudclusters);
-			pcl::visualization::CloudViewer viewer("Cluster viewer");
-			viewer.showCloud(colored_cloud);
-			while (!viewer.wasStopped()) {
-				boost::this_thread::sleep(boost::posix_time::microseconds(100));
-			}
+//			pcl::visualization::CloudViewer viewer("Cluster viewer");
+//			viewer.showCloud(colored_cloud);
+//			while (!viewer.wasStopped()) {
+//				boost::this_thread::sleep(boost::posix_time::microseconds(100));
+//			}
 
 			//Slope computation for the floor cloud
 		}
@@ -670,27 +671,65 @@ main(int argc, char** argv)
 			rangeImagePlanar.getImagePoint(planePoints->points[i].getVector3fMap(),y,x);
 			if (!isnan(x) && !isnan(y)) {
 				//cout<<"ciao\n"<<endl;
-				prova.at<cv::Vec3b>(x, y)[0] = 255;
-				prova.at<cv::Vec3b>(x, y)[1] = 255;
-				prova.at<cv::Vec3b>(x, y)[2] = 255;
-				prova.at<cv::Vec3b>(x+1, y)[0] = 255;
-				prova.at<cv::Vec3b>(x+1, y)[1] = 255;
-				prova.at<cv::Vec3b>(x+1, y)[2] = 255;
-				prova.at<cv::Vec3b>(x, y+1)[0] = 255;
-				prova.at<cv::Vec3b>(x, y+1)[1] = 255;
-				prova.at<cv::Vec3b>(x, y+1)[2] = 255;
-				prova.at<cv::Vec3b>(x+1, y+1)[0] = 255;
-				prova.at<cv::Vec3b>(x+1, y+1)[1] = 255;
-				prova.at<cv::Vec3b>(x+1, y+1)[2] = 255;
-				prova.at<cv::Vec3b>(x-1, y)[0] = 255;
-				prova.at<cv::Vec3b>(x-1, y)[1] = 255;
-				prova.at<cv::Vec3b>(x-1, y)[2] = 255;
-				prova.at<cv::Vec3b>(x, y-1)[0] = 255;
-				prova.at<cv::Vec3b>(x, y-1)[1] = 255;
-				prova.at<cv::Vec3b>(x, y-1)[2] = 255;
-				prova.at<cv::Vec3b>(x-1, y-1)[0] = 255;
-				prova.at<cv::Vec3b>(x-1, y-1)[1] = 255;
-				prova.at<cv::Vec3b>(x-1, y-1)[2] = 255;
+                prova.at<cv::Vec3b>(x, y)[2] = 255*blue(0);
+                prova.at<cv::Vec3b>(x, y)[1] = 255*green(0);
+                prova.at<cv::Vec3b>(x, y)[0] = 255*red(0);
+                prova.at<cv::Vec3b>(x+1, y)[2] = 255*blue(0);
+                prova.at<cv::Vec3b>(x+1, y)[1] = 255*green(0);
+                prova.at<cv::Vec3b>(x+1, y)[0] = 255*red(0);
+                prova.at<cv::Vec3b>(x, y+1)[2] = 255*blue(0);
+                prova.at<cv::Vec3b>(x, y+1)[1] = 255*green(0);
+                prova.at<cv::Vec3b>(x, y+1)[0] = 255*red(0);
+                prova.at<cv::Vec3b>(x+1, y+1)[2] = 255*blue(0);
+                prova.at<cv::Vec3b>(x+1, y+1)[1] = 255*green(0);
+                prova.at<cv::Vec3b>(x+1, y+1)[0] = 255*red(0);
+                prova.at<cv::Vec3b>(x-1, y)[2] = 255*blue(0);
+                prova.at<cv::Vec3b>(x-1, y)[1] = 255*green(0);
+                prova.at<cv::Vec3b>(x-1, y)[0] = 255*red(0);
+                prova.at<cv::Vec3b>(x, y-1)[2] = 255*blue(0);
+                prova.at<cv::Vec3b>(x, y-1)[1] = 255*green(0);
+                prova.at<cv::Vec3b>(x, y-1)[0] = 255*red(0);
+                prova.at<cv::Vec3b>(x-1, y-1)[2] = 255*blue(0);
+                prova.at<cv::Vec3b>(x-1, y-1)[1] = 255*green(0);
+                prova.at<cv::Vec3b>(x-1, y-1)[0] = 255*red(0);
+
+                prova.at<cv::Vec3b>(x+2, y)[2] = 255*blue(0);
+                prova.at<cv::Vec3b>(x+2, y)[1] = 255*green(0);
+                prova.at<cv::Vec3b>(x+2, y)[0] = 255*red(0);
+                prova.at<cv::Vec3b>(x, y+2)[2] = 255*blue(0);
+                prova.at<cv::Vec3b>(x, y+2)[1] = 255*green(0);
+                prova.at<cv::Vec3b>(x, y+2)[0] = 255*red(0);
+                prova.at<cv::Vec3b>(x+2, y+2)[2] = 255*blue(0);
+                prova.at<cv::Vec3b>(x+2, y+2)[1] = 255*green(0);
+                prova.at<cv::Vec3b>(x+2, y+2)[0] = 255*red(0);
+                prova.at<cv::Vec3b>(x-2, y)[2] = 255*blue(0);
+                prova.at<cv::Vec3b>(x-2, y)[1] = 255*green(0);
+                prova.at<cv::Vec3b>(x-2, y)[0] = 255*red(0);
+                prova.at<cv::Vec3b>(x, y-2)[2] = 255*blue(0);
+                prova.at<cv::Vec3b>(x, y-2)[1] = 255*green(0);
+                prova.at<cv::Vec3b>(x, y-2)[0] = 255*red(0);
+                prova.at<cv::Vec3b>(x-2, y-2)[2] = 255*blue(0);
+                prova.at<cv::Vec3b>(x-2, y-2)[1] = 255*green(0);
+                prova.at<cv::Vec3b>(x-2, y-2)[0] = 255*red(0);
+
+                prova.at<cv::Vec3b>(x+3, y)[2] = 255*blue(0);
+                prova.at<cv::Vec3b>(x+3, y)[1] = 255*green(0);
+                prova.at<cv::Vec3b>(x+3, y)[0] = 255*red(0);
+                prova.at<cv::Vec3b>(x, y+3)[2] = 255*blue(0);
+                prova.at<cv::Vec3b>(x, y+3)[1] = 255*green(0);
+                prova.at<cv::Vec3b>(x, y+3)[0] = 255*red(0);
+                prova.at<cv::Vec3b>(x+3, y+3)[2] = 255*blue(0);
+                prova.at<cv::Vec3b>(x+3, y+3)[1] = 255*green(0);
+                prova.at<cv::Vec3b>(x+3, y+3)[0] = 255*red(0);
+                prova.at<cv::Vec3b>(x-3, y)[2] = 255*blue(0);
+                prova.at<cv::Vec3b>(x-3, y)[1] = 255*green(0);
+                prova.at<cv::Vec3b>(x-3, y)[0] = 255*red(0);
+                prova.at<cv::Vec3b>(x, y-3)[2] = 255*blue(0);
+                prova.at<cv::Vec3b>(x, y-3)[1] = 255*green(0);
+                prova.at<cv::Vec3b>(x, y-3)[0] = 255*red(0);
+                prova.at<cv::Vec3b>(x-3, y-3)[2] = 255*blue(0);
+                prova.at<cv::Vec3b>(x-3, y-3)[1] = 255*green(0);
+                prova.at<cv::Vec3b>(x-3, y-3)[0] = 255*red(0);
 
 			}
 
@@ -1009,27 +1048,65 @@ main(int argc, char** argv)
 				rangeImagePlanar.getImagePoint(cluster->points[i].getVector3fMap(),y,x);
 				if (!isnan(x) && !isnan(y)) {
 					//cout<<"ciao\n"<<endl;
-					prova.at<cv::Vec3b>(x, y)[0] = 255*msc;
-					prova.at<cv::Vec3b>(x, y)[1] = 255*msc;
-					prova.at<cv::Vec3b>(x, y)[2] = 255*msc;
-					prova.at<cv::Vec3b>(x+1, y)[0] = 255*msc;
-					prova.at<cv::Vec3b>(x+1, y)[1] = 255*msc;
-					prova.at<cv::Vec3b>(x+1, y)[2] = 255*msc;
-					prova.at<cv::Vec3b>(x, y+1)[0] = 255*msc;
-					prova.at<cv::Vec3b>(x, y+1)[1] = 255*msc;
-					prova.at<cv::Vec3b>(x, y+1)[2] = 255*msc;
-					prova.at<cv::Vec3b>(x+1, y+1)[0] = 255*msc;
-					prova.at<cv::Vec3b>(x+1, y+1)[1] = 255*msc;
-					prova.at<cv::Vec3b>(x+1, y+1)[2] = 255*msc;
-					prova.at<cv::Vec3b>(x-1, y)[0] = 255*msc;
-					prova.at<cv::Vec3b>(x-1, y)[1] = 255*msc;
-					prova.at<cv::Vec3b>(x-1, y)[2] = 255*msc;
-					prova.at<cv::Vec3b>(x, y-1)[0] = 255*msc;
-					prova.at<cv::Vec3b>(x, y-1)[1] = 255*msc;
-					prova.at<cv::Vec3b>(x, y-1)[2] = 255*msc;
-					prova.at<cv::Vec3b>(x-1, y-1)[0] = 255*msc;
-					prova.at<cv::Vec3b>(x-1, y-1)[1] = 255*msc;
-					prova.at<cv::Vec3b>(x-1, y-1)[2] = 255*msc;
+                    prova.at<cv::Vec3b>(x, y)[2] = 255*blue(msc-1.0);
+                    prova.at<cv::Vec3b>(x, y)[1] = 255*green(msc-1.0);
+                    prova.at<cv::Vec3b>(x, y)[0] = 255*red(msc-1.0);
+                    prova.at<cv::Vec3b>(x+1, y)[2] = 255*blue(msc-1.0);
+                    prova.at<cv::Vec3b>(x+1, y)[1] = 255*green(msc-1.0);
+                    prova.at<cv::Vec3b>(x+1, y)[0] = 255*red(msc-1.0);
+                    prova.at<cv::Vec3b>(x, y+1)[2] = 255*blue(msc-1.0);
+                    prova.at<cv::Vec3b>(x, y+1)[1] = 255*green(msc-1.0);
+                    prova.at<cv::Vec3b>(x, y+1)[0] = 255*red(msc-1.0);
+                    prova.at<cv::Vec3b>(x+1, y+1)[2] = 255*blue(msc-1.0);
+                    prova.at<cv::Vec3b>(x+1, y+1)[1] = 255*green(msc-1.0);
+                    prova.at<cv::Vec3b>(x+1, y+1)[0] = 255*red(msc-1.0);
+                    prova.at<cv::Vec3b>(x-1, y)[2] = 255*blue(msc-1.0);
+                    prova.at<cv::Vec3b>(x-1, y)[1] = 255*green(msc-1.0);
+                    prova.at<cv::Vec3b>(x-1, y)[0] = 255*red(msc-1.0);
+                    prova.at<cv::Vec3b>(x, y-1)[2] = 255*blue(msc-1.0);
+                    prova.at<cv::Vec3b>(x, y-1)[1] = 255*green(msc-1.0);
+                    prova.at<cv::Vec3b>(x, y-1)[0] = 255*red(msc-1.0);
+                    prova.at<cv::Vec3b>(x-1, y-1)[2] = 255*blue(msc-1.0);
+                    prova.at<cv::Vec3b>(x-1, y-1)[1] = 255*green(msc-1.0);
+                    prova.at<cv::Vec3b>(x-1, y-1)[0] = 255*red(msc-1.0);
+
+                    prova.at<cv::Vec3b>(x+2, y)[2] = 255*blue(msc-1.0);
+                    prova.at<cv::Vec3b>(x+2, y)[1] = 255*green(msc-1.0);
+                    prova.at<cv::Vec3b>(x+2, y)[0] = 255*red(msc-1.0);
+                    prova.at<cv::Vec3b>(x, y+2)[2] = 255*blue(msc-1.0);
+                    prova.at<cv::Vec3b>(x, y+2)[1] = 255*green(msc-1.0);
+                    prova.at<cv::Vec3b>(x, y+2)[0] = 255*red(msc-1.0);
+                    prova.at<cv::Vec3b>(x+2, y+2)[2] = 255*blue(msc-1.0);
+                    prova.at<cv::Vec3b>(x+2, y+2)[1] = 255*green(msc-1.0);
+                    prova.at<cv::Vec3b>(x+2, y+2)[0] = 255*red(msc-1.0);
+                    prova.at<cv::Vec3b>(x-2, y)[2] = 255*blue(msc-1.0);
+                    prova.at<cv::Vec3b>(x-2, y)[1] = 255*green(msc-1.0);
+                    prova.at<cv::Vec3b>(x-2, y)[0] = 255*red(msc-1.0);
+                    prova.at<cv::Vec3b>(x, y-2)[2] = 255*blue(msc-1.0);
+                    prova.at<cv::Vec3b>(x, y-2)[1] = 255*green(msc-1.0);
+                    prova.at<cv::Vec3b>(x, y-2)[0] = 255*red(msc-1.0);
+                    prova.at<cv::Vec3b>(x-2, y-2)[2] = 255*blue(msc-1.0);
+                    prova.at<cv::Vec3b>(x-2, y-2)[1] = 255*green(msc-1.0);
+                    prova.at<cv::Vec3b>(x-2, y-2)[0] = 255*red(msc-1.0);
+
+                    prova.at<cv::Vec3b>(x+3, y)[2] = 255*blue(msc-1.0);
+                    prova.at<cv::Vec3b>(x+3, y)[1] = 255*green(msc-1.0);
+                    prova.at<cv::Vec3b>(x+3, y)[0] = 255*red(msc-1.0);
+                    prova.at<cv::Vec3b>(x, y+3)[2] = 255*blue(msc-1.0);
+                    prova.at<cv::Vec3b>(x, y+3)[1] = 255*green(msc-1.0);
+                    prova.at<cv::Vec3b>(x, y+3)[0] = 255*red(msc-1.0);
+                    prova.at<cv::Vec3b>(x+3, y+3)[2] = 255*blue(msc-1.0);
+                    prova.at<cv::Vec3b>(x+3, y+3)[1] = 255*green(msc-1.0);
+                    prova.at<cv::Vec3b>(x+3, y+3)[0] = 255*red(msc-1.0);
+                    prova.at<cv::Vec3b>(x-3, y)[2] = 255*blue(msc-1.0);
+                    prova.at<cv::Vec3b>(x-3, y)[1] = 255*green(msc-1.0);
+                    prova.at<cv::Vec3b>(x-3, y)[0] = 255*red(msc-1.0);
+                    prova.at<cv::Vec3b>(x, y-3)[2] = 255*blue(msc-1.0);
+                    prova.at<cv::Vec3b>(x, y-3)[1] = 255*green(msc-1.0);
+                    prova.at<cv::Vec3b>(x, y-3)[0] = 255*red(msc-1.0);
+                    prova.at<cv::Vec3b>(x-3, y-3)[2] = 255*blue(msc-1.0);
+                    prova.at<cv::Vec3b>(x-3, y-3)[1] = 255*green(msc-1.0);
+                    prova.at<cv::Vec3b>(x-3, y-3)[0] = 255*red(msc-1.0);
 				}
 
 
@@ -1087,7 +1164,7 @@ main(int argc, char** argv)
 		}
 
 		std::string fileNameim = argv[1];
-		fileNameim=fileNameim+"BIG.png";
+        fileNameim="ob"+fileNameim+"BIG.png";
 
 		cv::imwrite(fileNameim,prova);
 
