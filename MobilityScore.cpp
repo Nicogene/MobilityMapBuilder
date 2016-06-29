@@ -8,7 +8,7 @@
 
 double MobilityScore(double r, double s){
     double ms=1;
-    if(s>50 || r>1.6){
+    if(s>50 || r>2.0){
         ms=0;
         return ms;
     }
@@ -21,7 +21,7 @@ double MobilityScore(double r, double s){
 
         //std::cout<<"ciao "<<ms<<std::endl;
     }
-    if(r<1.6 && r>1.4){
+    if(r<2.0 && r>1.8){
         ms= ms-0.75;
         //std::cout<<"ciao "<<ms<<std::endl;
 
@@ -30,13 +30,13 @@ double MobilityScore(double r, double s){
         ms= ms-0.5;
         //std::cout<<"ciao "<<ms<<std::endl;
     }
-    if(r<1.4 && r>1.3){
+    if(r<1.8 && r>1.6){
         ms= ms-0.5;
     }
     if(s<15 && s>1) {
         ms= ms-0.25;
     }
-    if(r<1.3 && r>1.2){
+    if(r<1.6 && r>1.4){
         ms= ms-0.25;
     }
 

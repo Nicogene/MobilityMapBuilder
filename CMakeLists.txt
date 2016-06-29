@@ -36,6 +36,6 @@ add_definitions(${PCL_DEFINITIONS})
 set(PCL_BUILD_TYPE Release)
 set(SOURCE_FILES main.cpp)
 
-add_executable(mobilityMapBuilder ${SOURCE_FILES} ComputeArea.h ComputeArea.cpp dot.h dot.cpp MobilityScore.h MobilityScore.cpp ColormapJet.h ColormapJet.cpp)
+add_executable(mobilityMapBuilder ${SOURCE_FILES} ComputeArea.h ComputeArea.cpp dot.h dot.cpp MobilityScore.h MobilityScore.cpp)
 
 target_link_libraries (mobilityMapBuilder ${PCL_LIBRARIES}${QT4_LIBRARIES} ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES} ${OpenCV_LIBS})
