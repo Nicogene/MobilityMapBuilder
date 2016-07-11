@@ -133,7 +133,7 @@ main(int argc, char** argv)
 	pcl::PassThrough<pcl::PointXYZRGB> filterdepth;
 	filterdepth.setInputCloud(cloud);
 	filterdepth.setFilterFieldName("z");
-	filterdepth.setFilterLimits(0.0, 1.5);
+    filterdepth.setFilterLimits(0.0, 1.5);
 	filterdepth.filter(*cloud);
 	//io::savePCDFileASCII("Provaprof.pcd",*cloud);
 
@@ -149,7 +149,7 @@ main(int argc, char** argv)
 	// Use RANSAC method.
 	segmentation.setMethodType(pcl::SAC_RANSAC);
 	// Set the maximum allowed distance to the model.
-	segmentation.setDistanceThreshold(0.01);
+    segmentation.setDistanceThreshold(0.02);
 	// Enable model coefficient refinement (optional).
 	segmentation.setOptimizeCoefficients(true);
 
@@ -186,7 +186,7 @@ main(int argc, char** argv)
 		filterd.setInputCloud(cloudNoPlane);
 		// We set the size of every voxel to be 1x1x1cm
 		// (only one point per every cubic centimeter will survive).
-		filterd.setRadiusSearch(0.01f);
+        filterd.setRadiusSearch(0.01f);
 		// We need an additional object to store the indices of surviving points.
 		PointCloud<int> keypointIndices;
 		filterd.compute(keypointIndices);
@@ -323,9 +323,9 @@ main(int argc, char** argv)
 			// Here, the minimum cluster size affects also the postprocessing step:
 			// clusters smaller than this will be merged with their neighbors.
 			clustering.setMinClusterSize(600);//800
-			clustering.setMaxClusterSize(1000000);
+            clustering.setMaxClusterSize(1000000);
 			// Set the distance threshold, to know which points will be considered neighbors.
-			clustering.setDistanceThreshold(10);//10
+            clustering.setDistanceThreshold(10);//10
 			// Color threshold for comparing the RGB color of two points.
 			clustering.setPointColorThreshold(2);//10
 			// Region color threshold for the postprocessing step: clusters with colors
@@ -1056,8 +1056,8 @@ main(int argc, char** argv)
 
 			for (int i = 0; i <cluster->points.size(); ++i) {
 				//cout<<i<<endl;
-				rangeImagePlanar.getImagePoint(cluster->points[i].getVector3fMap(),y,x);
-				if (!isnan(x) && !isnan(y)) {
+                rangeImagePlanar.getImagePoint(cluster->points[i].getVector3fMap(),y,x);
+                if (!isnan(x) && !isnan(y)) {
                     //cout<<"ciao\n"<<endl;
                     //E' BGR
                     prova.at<cv::Vec3b>(x, y)[2] = red;
