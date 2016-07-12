@@ -54,6 +54,7 @@ main(int argc, char** argv)
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr planePointsproj(new pcl::PointCloud<pcl::PointXYZRGB>);
 	pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr plane_with_normals (new pcl::PointCloud<pcl::PointXYZRGBNormal>);
 	pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr plane_with_normalsproj (new pcl::PointCloud<pcl::PointXYZRGBNormal>);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudMap(new pcl::PointCloud<pcl::PointXYZRGB>);
 	cv::Mat prova;
 	ofstream trfile1("triangles1.txt");
 	ofstream trfile2("trianglesproj1.txt");
@@ -667,6 +668,9 @@ main(int argc, char** argv)
 		// Projection of points on the image.
 
 		for (int i = 0; i <planePoints->points.size(); ++i) {
+            planePoints->points[i].r=0;
+            planePoints->points[i].g=255;
+            planePoints->points[i].b=0;
 			//cout<<i<<endl;
 			rangeImagePlanar.getImagePoint(planePoints->points[i].getVector3fMap(),y,x);
 			if (!isnan(x) && !isnan(y)) {
@@ -742,7 +746,7 @@ main(int argc, char** argv)
 
 		pcl::io::savePCDFileASCII("cluster1.pcd",*planePoints);
 
-
+        *cloudMap=*planePoints;
 		int currentClusterNum = 2;
 		for (std::vector<pcl::PointIndices>::const_iterator i = clusters.begin(); i != clusters.end(); ++i)
 		{
@@ -1056,6 +1060,9 @@ main(int argc, char** argv)
 
 			for (int i = 0; i <cluster->points.size(); ++i) {
 				//cout<<i<<endl;
+                cluster->points[i].r=red;
+                cluster->points[i].g=green;
+                cluster->points[i].b=0;
                 rangeImagePlanar.getImagePoint(cluster->points[i].getVector3fMap(),y,x);
                 if (!isnan(x) && !isnan(y)) {
                     //cout<<"ciao\n"<<endl;
@@ -1125,6 +1132,8 @@ main(int argc, char** argv)
 
 			}
 
+            *cloudMap=*cloudMap+*cluster;
+
 
 
 
@@ -1176,8 +1185,9 @@ main(int argc, char** argv)
 		}
 
 		std::string fileNameim = argv[1];
+        std::string namecloud=argv[1];
         fileNameim=/*"ob"+*/fileNameim+"BIG.png";
-
+        pcl::io::savePCDFileASCII("Map"+namecloud, *cloudMap);
 		cv::imwrite(fileNameim,prova);
 
 
