@@ -546,7 +546,7 @@ main(int argc, char** argv)
                 CGAL::Point_3<Ker> p1(cit->vertex(0)->point()), p2(cit->vertex(1)->point()),p3(cit->vertex(2)->point());
                 v1.x=p1.x(); v2.x=p2.x(); v3.x=p3.x();
                 v1.y=p1.y(); v2.y=p2.y(); v3.y=p3.y();
-//                v1.z=p1.z(); v2.x=p2.z(); v3.x=p3.z();
+                v1.z=p1.z(); v2.x=p2.z(); v3.x=p3.z();
 //                trfile1<<v1.x<<" "<<v1.y<<" "<<v1.z<<"\n";
 //                trfile1<<v2.x<<" "<<v2.y<<" "<<v2.z<<"\n";
 //                trfile1<<v3.x<<" "<<v3.y<<" "<<v3.z<<"\n";
