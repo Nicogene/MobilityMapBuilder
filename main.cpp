@@ -43,7 +43,12 @@ using namespace std;
 int
 main(int argc, char** argv)
 {
-    int numfile=6,i=0;
+    int numfile,i;
+    std::cout<<"Insert the number of the first cloud"<<std::endl;
+    std::cin>>i;
+    std::cout<<"Insert the number of clouds"<<std::endl;
+    std::cin>>numfile;
+    numfile=i+numfile;
     std::string name;
 
     while(i<numfile){
@@ -60,6 +65,7 @@ main(int argc, char** argv)
         pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr plane_with_normals (new pcl::PointCloud<pcl::PointXYZRGBNormal>);
         pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr plane_with_normalsproj (new pcl::PointCloud<pcl::PointXYZRGBNormal>);
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudMap(new pcl::PointCloud<pcl::PointXYZRGB>);
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudclusters(new pcl::PointCloud<pcl::PointXYZRGB>);
         cv::Mat prova;
 //        ofstream trfile1("triangles1.txt");
 //        ofstream trfile2("trianglesproj1.txt");
@@ -176,6 +182,7 @@ main(int argc, char** argv)
             // Copy all inliers of the model to another cloud.
             //pcl::copyPointCloud<pcl::PointXYZ>(*cloud, *inlierIndices, *inlierPoints);
             // Also, extract the plane points to visualize them later.
+
             pcl::ExtractIndices<pcl::PointXYZRGB> extract;
             extract.setInputCloud(cloud);
             extract.setIndices(inlierIndices);
@@ -189,16 +196,17 @@ main(int argc, char** argv)
             //io::savePCDFileASCII("NCNOPlaneX.pcd",*cloudNoPlane);
             //io::savePCDFileASCII("NCPlaneX.pcd",*planePoints);
             //Downsampling and SOR on both the clouds
-
             pcl::UniformSampling<pcl::PointXYZRGB> filterd;
-            filterd.setInputCloud(cloudNoPlane);
-            // We set the size of every voxel to be 1x1x1cm
-            // (only one point per every cubic centimeter will survive).
-            filterd.setRadiusSearch(0.01f);
-            // We need an additional object to store the indices of surviving points.
             PointCloud<int> keypointIndices;
-            filterd.compute(keypointIndices);
-            copyPointCloud(*cloudNoPlane, keypointIndices.points, *cloudNoPlane);
+            if(cloudNoPlane->points.size()>=800){
+                filterd.setInputCloud(cloudNoPlane);
+                // We set the size of every voxel to be 1x1x1cm
+                // (only one point per every cubic centimeter will survive).
+                filterd.setRadiusSearch(0.01f);
+                // We need an additional object to store the indices of surviving points.
+                filterd.compute(keypointIndices);
+                copyPointCloud(*cloudNoPlane, keypointIndices.points, *cloudNoPlane);
+            }
 
             filterd.setInputCloud(planePoints);
             filterd.setRadiusSearch(0.01f);
@@ -207,15 +215,18 @@ main(int argc, char** argv)
             //io::savePCDFileASCII("ProvaDow",*cloud);
             cout<<"CloudNOPlane size "<<cloudNoPlane->points.size()<<endl;
             cout<<"Plane size "<<planePoints->points.size()<<endl;
-
             pcl::StatisticalOutlierRemoval<pcl::PointXYZRGB> filter;
-            filter.setInputCloud(cloudNoPlane);
-            // Set number of neighbors to consider to 50.
-            filter.setMeanK(50);
-            // Set standard deviation multiplier to 1.
-            // Points with a distance larger than 1 standard deviation of the mean distance will be outliers.
-            filter.setStddevMulThresh(1.0);
-            filter.filter(*cloudNoPlane);
+            if(cloudNoPlane->points.size()>=800){
+                filter.setInputCloud(cloudNoPlane);
+                // Set number of neighbors to consider to 50.
+                filter.setMeanK(50);
+                // Set standard deviation multiplier to 1.
+                // Points with a distance larger than 1 standard deviation of the mean distance will be outliers.
+                filter.setStddevMulThresh(1.0);
+                filter.filter(*cloudNoPlane);
+            }
+
+
 
             filter.setInputCloud(planePoints);
             // Set number of neighbors to consider to 50.
@@ -237,14 +248,16 @@ main(int argc, char** argv)
             }
 
             //Normals computation on both clouds
-
             NormalEstimation<PointXYZRGB,Normal> ne;
-            ne.setInputCloud(cloudNoPlane);
-            ne.setRadiusSearch(0.06);
-            //ne.setKSearch(25); //if you use this it compute the normals using k-nearest neighbors
             search::KdTree<PointXYZRGB>::Ptr kdtree(new search::KdTree<PointXYZRGB>);
-            ne.setSearchMethod(kdtree);
-            ne.compute(*normals);
+            if(cloudNoPlane->points.size()>=800){
+                ne.setInputCloud(cloudNoPlane);
+                ne.setRadiusSearch(0.06);
+                //ne.setKSearch(25); //if you use this it compute the normals using k-nearest neighbors
+                ne.setSearchMethod(kdtree);
+                ne.compute(*normals);
+            }
+//            cout<<"Ciao1"<<endl;
 
             ne.setInputCloud(planePoints);
             ne.setRadiusSearch(0.06);
@@ -256,7 +269,7 @@ main(int argc, char** argv)
             //cout<<"I parametri del modello del piano LS sono a="<<PlaneParameter[0]<<" b= "<<PlaneParameter[1]<<" c= "<<PlaneParameter[2]<<" d= "<<PlaneParameter[3]<<endl;
 
             //Now we color the clouds using the RGB-Normals coding
-
+//            cout<<"Ciao2"<<endl;
             vector<float> nx,nxp,ny,nyp,nz,nzp;
             nx.resize(cloudNoPlane->points.size());
             ny.resize(cloudNoPlane->points.size());
@@ -264,13 +277,16 @@ main(int argc, char** argv)
             nxp.resize(planePoints->points.size());
             nyp.resize(planePoints->points.size());
             nzp.resize(planePoints->points.size());
+//            cout<<nx.size()<<" "<<ny.size()<<" "<<nz.size()<<std::endl;
+//            cout<<nxp.size()<<" "<<nyp.size()<<" "<<nzp.size()<<std::endl;
+//            cout<<normals->size()<<" "<<planenormals->size()<<std::endl;
             //myfile<<"Number of points: "<<cnormal->points.size()<<endl;
-            for (int j = 0; j <cloudNoPlane->points.size() ; ++j) {
+            for (int j = 0; j <normals->size() ; ++j) {
                 nx[j] = normals->points[j].normal_x;
                 ny[j] = normals->points[j].normal_y;
                 nz[j] = normals->points[j].normal_z;
             }
-            for (int j = 0; j <planePoints->points.size() ; ++j) {
+            for (int j = 0; j <planenormals->size() ; ++j) {
                 nxp[j] = planenormals->points[j].normal_x;
                 nyp[j] =planenormals->points[j].normal_y;
                 nzp[j] =planenormals->points[j].normal_z;
@@ -278,37 +294,51 @@ main(int argc, char** argv)
                 float minx,miny,minz,maxx,maxy,maxz;
                 float minxp,minyp,minzp,maxxp,maxyp,maxzp;
             //calcolo minimi e massimi dei valori di xyz per normalizzarli tra 0 e 255 per usarli in rgb
-            maxx=*max_element(nx.begin(),nx.end());
-            maxy=*max_element(ny.begin(),ny.end());
-            maxz=*max_element(nz.begin(),nz.end());
             maxxp=*max_element(nxp.begin(),nxp.end());
             maxyp=*max_element(nyp.begin(),nyp.end());
             maxzp=*max_element(nzp.begin(),nzp.end());
-            maxx=max(maxx,maxxp);
-            maxy=max(maxy,maxyp);
-            maxz=max(maxz,maxzp);
-            //cout<<maxx<<" "<<maxy<<" "<<maxz<<endl;
-
-            minx=*min_element(nx.begin(),nx.end());
-            miny=*min_element(ny.begin(),ny.end());
-            minz=*min_element(nz.begin(),nz.end());
             minxp=*min_element(nxp.begin(),nxp.end());
             minyp=*min_element(nyp.begin(),nyp.end());
             minzp=*min_element(nzp.begin(),nzp.end());
-            minx=min(minx,minxp);
-            miny=min(miny,minyp);
-            minz=min(minz,minzp);
+//            cout<<nx.size()<<" "<<ny.size()<<" "<<nz.size()<<std::endl;
+            if(normals->size()>=600){//perche' di alcuni non lo calcola
+                maxx=*max_element(nx.begin(),nx.end());
+                maxy=*max_element(ny.begin(),ny.end());
+                maxz=*max_element(nz.begin(),nz.end());
+                maxx=max(maxx,maxxp);
+                maxy=max(maxy,maxyp);
+                maxz=max(maxz,maxzp);
+                minx=*min_element(nx.begin(),nx.end());
+                miny=*min_element(ny.begin(),ny.end());
+                minz=*min_element(nz.begin(),nz.end());
+                minx=min(minx,minxp);
+                miny=min(miny,minyp);
+                minz=min(minz,minzp);
+            }
+            else{
+                maxx=maxxp;
+                maxy=maxyp;
+                maxz=maxzp;
+                minx=minxp;
+                miny=minyp;
+                minz=minzp;
+
+            }
+            //cout<<maxx<<" "<<maxy<<" "<<maxz<<endl;
+
 
 
 
             //cout<<minx<<" "<<miny<<" "<<minz<<endl;
 
-            for(int i=0;i<cloudNoPlane->points.size();i++)
-            {
-                cloudNoPlane->points[i].r=(255/(maxx-minx))*(normals->points[i].normal_x-minx);
-                cloudNoPlane->points[i].g=(255/(maxy-miny))*(normals->points[i].normal_y-miny);
-                cloudNoPlane->points[i].b=(255/(maxz-minz))*(normals->points[i].normal_z-minz);
+            if(normals->size()>=600){
+                for(int i=0;i<cloudNoPlane->points.size();i++)
+                {
+                    cloudNoPlane->points[i].r=(255/(maxx-minx))*(normals->points[i].normal_x-minx);
+                    cloudNoPlane->points[i].g=(255/(maxy-miny))*(normals->points[i].normal_y-miny);
+                    cloudNoPlane->points[i].b=(255/(maxz-minz))*(normals->points[i].normal_z-minz);
 
+                }
             }
 
             for(int i=0;i<planePoints->points.size();i++)
@@ -323,7 +353,8 @@ main(int argc, char** argv)
             //Color-based segmentation on the cloud without the floor colored with the NC coding.
             pcl::RegionGrowingRGB<pcl::PointXYZRGB> clustering;
             std::vector<pcl::PointIndices> clusters;
-            if(cloudNoPlane->points.size()>=600) {
+
+            if(cloudNoPlane->points.size()>= 800) {
                 // Color-based region growing clustering object.
 
                 clustering.setInputCloud(cloudNoPlane);
@@ -346,7 +377,7 @@ main(int argc, char** argv)
 
 
 
-                pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudclusters(new pcl::PointCloud<pcl::PointXYZRGB>);
+
                 *cloudclusters = (*colored_cloud) + (*planePoints);
 
                 //io::savePCDFileASCII("Colored.pcd", *cloudclusters);
@@ -360,6 +391,8 @@ main(int argc, char** argv)
             }
             else
                 cout<<"C'è solo un piano!\n";
+
+//            cout<<"Ciao3"<<endl;
 
             float pslope;
             std::vector<float> accx,accy,accz, pmeanNorm, normfit;
@@ -681,7 +714,7 @@ main(int argc, char** argv)
                 //cout<<i<<endl;
                 rangeImagePlanar.getImagePoint(planePoints->points[i].getVector3fMap(),y,x);
                 if (!std::isnan(x) && !std::isnan(y)) {
-                    //cout<<"ciao\n"<<endl;
+                    //cout<<" \n"<<endl;
                     prova.at<cv::Vec3b>(x, y)[2] = 0;
                     prova.at<cv::Vec3b>(x, y)[1] = 255;
                     prova.at<cv::Vec3b>(x, y)[0] = 0;
@@ -751,7 +784,7 @@ main(int argc, char** argv)
             //cv::imwrite("Map.jpg",prova);
 
 
-            pcl::io::savePCDFileASCII("cluster1.pcd",*planePoints);
+//            pcl::io::savePCDFileASCII("cluster1.pcd",*planePoints);
 
             *cloudMap=*planePoints;
             int currentClusterNum = 2;
@@ -1068,7 +1101,7 @@ main(int argc, char** argv)
                     cluster->points[i].b=0;
                     rangeImagePlanar.getImagePoint(cluster->points[i].getVector3fMap(),y,x);
                     if (!std::isnan(x) && !std::isnan(y)) {
-                        //cout<<"ciao\n"<<endl;
+                        //cout<<" \n"<<endl;
                         //E' BGR
                         prova.at<cv::Vec3b>(x, y)[2] = red;
                         prova.at<cv::Vec3b>(x, y)[1] = green;
@@ -1183,6 +1216,13 @@ main(int argc, char** argv)
                 //pcl::io::savePCDFileASCII(fileName, *cluster);
 
                 accx.clear();accy.clear();accz.clear();normfitclus.clear(); //Libero la memoria
+                cluster->clear();
+                planeclus->clear();
+                clusterproj->clear();
+                ncluster->clear();
+                nclusterproj->clear();
+                cluster_with_normals->clear();
+                cluster_with_normalsproj->clear();
 
                 currentClusterNum++;
             }
@@ -1191,12 +1231,28 @@ main(int argc, char** argv)
             std::string namecloud=name;
             fileNameim=/*"ob"+*/fileNameim+"BIG.png";
             pcl::io::savePCDFileASCII("Map"+namecloud, *cloudMap);
+
             //cv::imwrite(fileNameim,prova);
 
 
 
 
         }
+        cloud->clear();
+        tmp->clear();
+        normals->clear();
+        planenormals->clear();
+        planenormalsproj->clear();
+        cloudNoPlane->clear();
+        planePoints->clear();
+        planePointsproj->clear();
+        plane_with_normals->clear();
+        plane_with_normalsproj->clear();
+        cloudMap->clear();
+        cloudclusters->clear();
+
+
+
         i++;
     }
 }
