@@ -33,7 +33,8 @@
 #include "ComputeArea.h"
 #include "dot.h"
 
-
+#include <time.h>
+#include <math.h>
 #include <iostream>
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Ker;
 using  namespace pcl;
@@ -50,6 +51,11 @@ main(int argc, char** argv)
     std::cin>>numfile;
     numfile=i+numfile;
     std::string name;
+
+    clock_t t,t1,t2,t3,t4,t5,t6,t7,t8,t9;
+    int numcl;
+
+    t=clock();
 
     while(i<numfile){
 
@@ -135,7 +141,7 @@ main(int argc, char** argv)
                 }
             }
         }
-
+        t1=clock();
         //cv::imwrite("Map.jpg",prova);
 
         //removing NAN from the cloud
@@ -152,7 +158,7 @@ main(int argc, char** argv)
         //io::savePCDFileASCII("Provaprof.pcd",*cloud);
 
         //As first step we use a RANSAC technique to extract the main plane of the cloud: the floor.
-
+        t5=clock();
         // Object for storing the plane model coefficients.
         pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
         // Create the segmentation object.
@@ -193,6 +199,8 @@ main(int argc, char** argv)
             cout<<"Cloud size "<<cloud->points.size()<<endl;
             cout<<"CloudNOPlane size "<<cloudNoPlane->points.size()<<endl;
             cout<<"Plane size "<<planePoints->points.size()<<endl;
+            t5=clock()-t5;
+            cout<<"Ground extraction takes "<<((float)t5)/CLOCKS_PER_SEC<<" secs"<<endl;
             //io::savePCDFileASCII("NCNOPlaneX.pcd",*cloudNoPlane);
             //io::savePCDFileASCII("NCPlaneX.pcd",*planePoints);
             //Downsampling and SOR on both the clouds
@@ -215,6 +223,9 @@ main(int argc, char** argv)
             //io::savePCDFileASCII("ProvaDow",*cloud);
             cout<<"CloudNOPlane size "<<cloudNoPlane->points.size()<<endl;
             cout<<"Plane size "<<planePoints->points.size()<<endl;
+            t1=clock()-t1-t5;
+            cout<<"Data reduction takes "<<((float)t1)/CLOCKS_PER_SEC<<" secs"<<endl;
+            t2=clock();
             pcl::StatisticalOutlierRemoval<pcl::PointXYZRGB> filter;
             if(cloudNoPlane->points.size()>=800){
                 filter.setInputCloud(cloudNoPlane);
@@ -235,6 +246,8 @@ main(int argc, char** argv)
             // Points with a distance larger than 1 standard deviation of the mean distance will be outliers.
             filter.setStddevMulThresh(1.0);
             filter.filter(*planePoints);
+            t2=clock()-t2;
+            cout<<"Denoise takes "<<((float)t2)/CLOCKS_PER_SEC<<" secs"<<endl;
 
             //We define the variables that we will use to extract the fitted plane using LS method
 
@@ -246,7 +259,7 @@ main(int argc, char** argv)
             for (int k = 0; k <indices.size() ; ++k) {
                 indices[k]=k;
             }
-
+            t3=clock();
             //Normals computation on both clouds
             NormalEstimation<PointXYZRGB,Normal> ne;
             search::KdTree<PointXYZRGB>::Ptr kdtree(new search::KdTree<PointXYZRGB>);
@@ -265,9 +278,11 @@ main(int argc, char** argv)
             ne.setSearchMethod(kdtree);
             ne.compute(*planenormals);
             ne.computePointNormal(*planePoints,indices,PlaneParameter,curv); //It's the best LS plane
+            t3=clock()-t3;
+            cout<<"Normal estimation takes "<<((float)t3)/CLOCKS_PER_SEC<<" secs"<<endl;
 
             //cout<<"I parametri del modello del piano LS sono a="<<PlaneParameter[0]<<" b= "<<PlaneParameter[1]<<" c= "<<PlaneParameter[2]<<" d= "<<PlaneParameter[3]<<endl;
-
+            t4=clock();
             //Now we color the clouds using the RGB-Normals coding
 //            cout<<"Ciao2"<<endl;
             vector<float> nx,nxp,ny,nyp,nz,nzp;
@@ -347,10 +362,15 @@ main(int argc, char** argv)
                 planePoints->points[i].g=(255/(maxy-miny))*(planenormals->points[i].normal_y-miny);
                 planePoints->points[i].b=(255/(maxz-minz))*(planenormals->points[i].normal_z-minz);
 
+
             }
+
+            t4=clock()-t4;
+            cout<<"RGB coding takes "<<((float)t4)/CLOCKS_PER_SEC<<" secs"<<endl;
 
 
             //Color-based segmentation on the cloud without the floor colored with the NC coding.
+            t6=clock();
             pcl::RegionGrowingRGB<pcl::PointXYZRGB> clustering;
             std::vector<pcl::PointIndices> clusters;
 
@@ -371,6 +391,7 @@ main(int argc, char** argv)
                 // within the threshold will be merged in one.
                 clustering.setRegionColorThreshold(2);
                 clustering.extract(clusters);
+                numcl=clusters.size();
 
 
                 pcl::PointCloud<pcl::PointXYZRGB>::Ptr colored_cloud = clustering.getColoredCloud();
@@ -393,6 +414,8 @@ main(int argc, char** argv)
                 cout<<"C'è solo un piano!\n";
 
 //            cout<<"Ciao3"<<endl;
+            t6=clock()-t6;
+            cout<<"Color segmentation takes "<<((float)t6)/CLOCKS_PER_SEC<<" secs"<<endl;
 
             float pslope;
             std::vector<float> accx,accy,accz, pmeanNorm, normfit;
@@ -461,6 +484,7 @@ main(int argc, char** argv)
             //cout<<"La slope del cluster n 1 è "<<pslope<<"°"<<endl; SONO UGUALI
             s=slopefit;
             cout<<"La slope del cluster n 1 è "<< slopefit<<"°"<<endl;
+            CGAL::Delaunay_triangulation_3<Ker>::Finite_cells_iterator cit;
 
 
 //            ofstream myfilep("slopes1.txt");
@@ -499,198 +523,200 @@ main(int argc, char** argv)
 
             //Altro metodo per calcolare la ROUGHNESS Ai/Ao
 
-            double totAi=0.0,totA0=0.0;
+//            double totAi=0.0,totA0=0.0;
 
 
-            //Per la fast greedy projectio triangulation abbiamo biosgno di una point normal.
+//            //Per la fast greedy projectio triangulation abbiamo biosgno di una point normal.
 
-            pcl::concatenateFields(*planePoints, *planenormals, *plane_with_normals);
-            //* cloud_with_normals = cloud + normals
+//            pcl::concatenateFields(*planePoints, *planenormals, *plane_with_normals);
+//            //* cloud_with_normals = cloud + normals
 
-            // Create search tree*
-            pcl::search::KdTree<pcl::PointXYZRGBNormal>::Ptr tree2 (new pcl::search::KdTree<pcl::PointXYZRGBNormal>);
-            tree2->setInputCloud (plane_with_normals);
+//            // Create search tree*
+//            pcl::search::KdTree<pcl::PointXYZRGBNormal>::Ptr tree2 (new pcl::search::KdTree<pcl::PointXYZRGBNormal>);
+//            tree2->setInputCloud (plane_with_normals);
 
-            // Initialize objects
-            pcl::GreedyProjectionTriangulation<PointXYZRGBNormal> gp3;
-            pcl::PolygonMesh triangles;
+//            // Initialize objects
+//            pcl::GreedyProjectionTriangulation<PointXYZRGBNormal> gp3;
+//            pcl::PolygonMesh triangles;
 
-            // Set the maximum distance between connected points (maximum edge length)
-            gp3.setSearchRadius (0.025);
+//            // Set the maximum distance between connected points (maximum edge length)
+//            gp3.setSearchRadius (0.025);
 
-            // Set typical values for the parameters
-            gp3.setMu (2.5);
-            gp3.setMaximumNearestNeighbors (100);
-            gp3.setMaximumSurfaceAngle(M_PI/4); // 45 degrees
-            gp3.setMinimumAngle(M_PI/18); // 10 degrees
-            gp3.setMaximumAngle(2*M_PI/3); // 120 degrees
-            gp3.setNormalConsistency(false);
+//            // Set typical values for the parameters
+//            gp3.setMu (2.5);
+//            gp3.setMaximumNearestNeighbors (100);
+//            gp3.setMaximumSurfaceAngle(M_PI/4); // 45 degrees
+//            gp3.setMinimumAngle(M_PI/18); // 10 degrees
+//            gp3.setMaximumAngle(2*M_PI/3); // 120 degrees
+//            gp3.setNormalConsistency(false);
 
-            // Get result
-            gp3.setInputCloud (plane_with_normals);
-            gp3.setSearchMethod (tree2);
-            gp3.reconstruct (triangles);
+//            // Get result
+//            gp3.setInputCloud (plane_with_normals);
+//            gp3.setSearchMethod (tree2);
+//            gp3.reconstruct (triangles);
 
-            CGAL::Delaunay_triangulation_3<Ker>::Finite_cells_iterator cit;
+//
 
-            std::list< CGAL::Point_3 <Ker> > points;
+//            std::list< CGAL::Point_3 <Ker> > points;
 
-            double totAiDel=0,totA0Del=0;
+//            double totAiDel=0,totA0Del=0;
 
-            for (int i = 0; i <planePoints->points.size() ; ++i) {
-                points.push_front(CGAL::Point_3<Ker> (planePoints->points[i].x,planePoints->points[i].y,planePoints->points[i].z));
-            }
-            CGAL::Delaunay_triangulation_3<Ker> dt(points.begin(),points.end());
-            for (cit=dt.finite_cells_begin(); cit != dt.finite_cells_end() ; ++cit) {
-                pcl::PointXYZRGB v1,v2,v3;
-                CGAL::Point_3<Ker> p1(cit->vertex(0)->point()), p2(cit->vertex(1)->point()),p3(cit->vertex(2)->point());
-                v1.x=p1.x(); v2.x=p2.x(); v3.x=p3.x();
-                v1.y=p1.y(); v2.y=p2.y(); v3.y=p3.y();
-                v1.z=p1.z(); v2.x=p2.z(); v3.x=p3.z();
-//                trfile1<<v1.x<<" "<<v1.y<<" "<<v1.z<<"\n";
-//                trfile1<<v2.x<<" "<<v2.y<<" "<<v2.z<<"\n";
-//                trfile1<<v3.x<<" "<<v3.y<<" "<<v3.z<<"\n";
+//            for (int i = 0; i <planePoints->points.size() ; ++i) {
+//                points.push_front(CGAL::Point_3<Ker> (planePoints->points[i].x,planePoints->points[i].y,planePoints->points[i].z));
+//            }
+//            CGAL::Delaunay_triangulation_3<Ker> dt(points.begin(),points.end());
+//            for (cit=dt.finite_cells_begin(); cit != dt.finite_cells_end() ; ++cit) {
+//                pcl::PointXYZRGB v1,v2,v3;
+//                CGAL::Point_3<Ker> p1(cit->vertex(0)->point()), p2(cit->vertex(1)->point()),p3(cit->vertex(2)->point());
+//                v1.x=p1.x(); v2.x=p2.x(); v3.x=p3.x();
+//                v1.y=p1.y(); v2.y=p2.y(); v3.y=p3.y();
+//                v1.z=p1.z(); v2.x=p2.z(); v3.x=p3.z();
+////                trfile1<<v1.x<<" "<<v1.y<<" "<<v1.z<<"\n";
+////                trfile1<<v2.x<<" "<<v2.y<<" "<<v2.z<<"\n";
+////                trfile1<<v3.x<<" "<<v3.y<<" "<<v3.z<<"\n";
 
-                totAiDel=totAiDel + ComputeArea(v1,v2,v3);
-            }
-            points.clear();
+//                totAiDel=totAiDel + ComputeArea(v1,v2,v3);
+//            }
+//            points.clear();
 
-            cout<<"TotAiDel= "<<totAiDel<<endl;
-
-
-
-
-            for (int l = 0; l <triangles.polygons.size() ; ++l) {
-
-                pcl::PointXYZRGB v1,v2,v3;
-                v1=planePoints->points[triangles.polygons[l].vertices[0]];
-                v2=planePoints->points[triangles.polygons[l].vertices[1]];
-                v3=planePoints->points[triangles.polygons[l].vertices[2]];
-                //cout<<ComputeArea(v1,v2,v3)<<endl;
-                //cout<<"ITERATION\n";
-                //cout<<v1<<endl<<v2<<endl<<v3<<endl;
-
-                totAi=totAi + ComputeArea(v1,v2,v3);
-                //cout<<"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
-            }
-            //cout<<"TOTAi= "<<totAi<<endl;
-            //Dopo aver calcolato l'area dei triangoli originali proietto i punti sul modello e calcolo l area di questi.
-            pcl::ProjectInliers<pcl::PointXYZRGB> proj;
-            proj.setModelType (pcl::SACMODEL_PLANE);
-            proj.setInputCloud (planePoints);
-            proj.setModelCoefficients (coefficients);
-            proj.filter (*planePointsproj);
-
-
-            ne.setSearchMethod(kdtree);
-            ne.setInputCloud(planePointsproj);
-            ne.setRadiusSearch(0.06);
-            //ne.setKSearch(25); //if you use this it compute the normals using k-nearest neighbors
-            ne.setSearchMethod(kdtree);
-            ne.compute(*planenormalsproj);
+//            cout<<"TotAiDel= "<<totAiDel<<endl;
 
 
 
-            pcl::concatenateFields(*planePointsproj, *planenormalsproj, *plane_with_normalsproj);
-            //* cloud_with_normals = cloud + normals
 
-            // Create search tree*
-            pcl::search::KdTree<pcl::PointXYZRGBNormal>::Ptr tree3 (new pcl::search::KdTree<pcl::PointXYZRGBNormal>);
-            tree3->setInputCloud (plane_with_normalsproj);
+//            for (int l = 0; l <triangles.polygons.size() ; ++l) {
 
-            // Initialize objects
-            pcl::GreedyProjectionTriangulation<PointXYZRGBNormal> gp4;
-            pcl::PolygonMesh triangles2;
+//                pcl::PointXYZRGB v1,v2,v3;
+//                v1=planePoints->points[triangles.polygons[l].vertices[0]];
+//                v2=planePoints->points[triangles.polygons[l].vertices[1]];
+//                v3=planePoints->points[triangles.polygons[l].vertices[2]];
+//                //cout<<ComputeArea(v1,v2,v3)<<endl;
+//                //cout<<"ITERATION\n";
+//                //cout<<v1<<endl<<v2<<endl<<v3<<endl;
 
-            // Set the maximum distance between connected points (maximum edge length)
-            gp4.setSearchRadius (0.025);
-
-            // Set typical values for the parameters
-            gp4.setMu (2.5);
-            gp4.setMaximumNearestNeighbors (100);
-            gp4.setMaximumSurfaceAngle(M_PI/4); // 45 degrees
-            gp4.setMinimumAngle(M_PI/18); // 10 degrees
-            gp4.setMaximumAngle(2*M_PI/3); // 120 degrees
-            gp4.setNormalConsistency(false);
-
-            // Get result
-            gp4.setInputCloud (plane_with_normalsproj);
-            gp4.setSearchMethod (tree3);
-            gp4.reconstruct (triangles2);
+//                totAi=totAi + ComputeArea(v1,v2,v3);
+//                //cout<<"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+//            }
+//            //cout<<"TOTAi= "<<totAi<<endl;
+//            //Dopo aver calcolato l'area dei triangoli originali proietto i punti sul modello e calcolo l area di questi.
+//            pcl::ProjectInliers<pcl::PointXYZRGB> proj;
+//            proj.setModelType (pcl::SACMODEL_PLANE);
+//            proj.setInputCloud (planePoints);
+//            proj.setModelCoefficients (coefficients);
+//            proj.filter (*planePointsproj);
 
 
-            float totA0new=0;
-            Eigen::Vector3f normtemp;
-            normtemp[0]=coefficients->values[0];
-            normtemp[1]=coefficients->values[1];
-            normtemp[2]=coefficients->values[2];
-
-            for (int i = 0; i <planePointsproj->points.size() ; ++i) {
-                points.push_front(CGAL::Point_3<Ker> (planePointsproj->points[i].x,planePointsproj->points[i].y,planePointsproj->points[i].z));
-            }
-            CGAL::Delaunay_triangulation_3<Ker> dtprj(points.begin(),points.end());
-            for (cit=dtprj.finite_cells_begin(); cit != dtprj.finite_cells_end() ; ++cit) {
-                pcl::PointXYZRGB v1,v2,v3;
-                CGAL::Point_3<Ker> p1(cit->vertex(0)->point()), p2(cit->vertex(1)->point()),p3(cit->vertex(2)->point());
-                v1.x=p1.x(); v2.x=p2.x(); v3.x=p3.x();
-                v1.y=p1.y(); v2.y=p2.y(); v3.y=p3.y();
-                v1.z=p1.z(); v2.x=p2.z(); v3.x=p3.z();
-
-//                trfile2<<v1.x<<" "<<v1.y<<" "<<v1.z<<"\n";
-//                trfile2<<v2.x<<" "<<v2.y<<" "<<v2.z<<"\n";
-//                trfile2<<v3.x<<" "<<v3.y<<" "<<v3.z<<"\n";
-
-                totA0Del=totA0Del + ComputeArea(v1,v2,v3);
-            }
-            cout<<"totA0Del= "<<totA0Del<<endl;
+//            ne.setSearchMethod(kdtree);
+//            ne.setInputCloud(planePointsproj);
+//            ne.setRadiusSearch(0.06);
+//            //ne.setKSearch(25); //if you use this it compute the normals using k-nearest neighbors
+//            ne.setSearchMethod(kdtree);
+//            ne.compute(*planenormalsproj);
 
 
-            for (int l = 0; l <triangles2.polygons.size() ; ++l) {
 
-                pcl::PointXYZRGB v1,v2,v3;
+//            pcl::concatenateFields(*planePointsproj, *planenormalsproj, *plane_with_normalsproj);
+//            //* cloud_with_normals = cloud + normals
 
+//            // Create search tree*
+//            pcl::search::KdTree<pcl::PointXYZRGBNormal>::Ptr tree3 (new pcl::search::KdTree<pcl::PointXYZRGBNormal>);
+//            tree3->setInputCloud (plane_with_normalsproj);
 
-                //pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudtmp(new pcl::PointCloud<pcl::PointXYZRGB>);
-                v1=planePointsproj->points[triangles2.polygons[l].vertices[0]];
-                v2=planePointsproj->points[triangles2.polygons[l].vertices[1]];
-                v3=planePointsproj->points[triangles2.polygons[l].vertices[2]];
+//            // Initialize objects
+//            pcl::GreedyProjectionTriangulation<PointXYZRGBNormal> gp4;
+//            pcl::PolygonMesh triangles2;
 
+//            // Set the maximum distance between connected points (maximum edge length)
+//            gp4.setSearchRadius (0.025);
 
-                /*pcl::geometry::project(v1.getVector3fMap(),v2.getVector3fMap(),normtemp,v1v);
-                pcl::geometry::project(v2.getVector3fMap(),v1.getVector3fMap(),normtemp,v2v);
-                pcl::geometry::project(v3.getVector3fMap(),v2.getVector3fMap(),normtemp,v3v);
-                v1n.x=v1v[0];
-                v2n.y=v2v[1];
-                v3n.z=v3v[2];
-                //cout<<ComputeArea(v1,v2,v3)<<endl;
-                //cout<<"ITERATION\n";
-                //cout<<v1<<endl<<v2<<endl<<v3<<endl;
+//            // Set typical values for the parameters
+//            gp4.setMu (2.5);
+//            gp4.setMaximumNearestNeighbors (100);
+//            gp4.setMaximumSurfaceAngle(M_PI/4); // 45 degrees
+//            gp4.setMinimumAngle(M_PI/18); // 10 degrees
+//            gp4.setMaximumAngle(2*M_PI/3); // 120 degrees
+//            gp4.setNormalConsistency(false);
 
-
-                totA0new=totA0new + ComputeArea(v1n, v2n, v3n);
-
-                cout<<"--------------------------\n";
-                cout<<ComputeArea(v1,v2,v3)<<endl;
-                cout<<ComputeArea(v1n, v2n, v3n)<<endl;*/
-                totA0=totA0 + ComputeArea(v1,v2,v3);
-
-
-                //cout<<"SEE HERE "<<totA0<<endl;
-                //cout<<"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
-            }
+//            // Get result
+//            gp4.setInputCloud (plane_with_normalsproj);
+//            gp4.setSearchMethod (tree3);
+//            gp4.reconstruct (triangles2);
 
 
-            //cout<<"TOTA0= "<<totA0<<endl;
+//            float totA0new=0;
+//            Eigen::Vector3f normtemp;
+//            normtemp[0]=coefficients->values[0];
+//            normtemp[1]=coefficients->values[1];
+//            normtemp[2]=coefficients->values[2];
 
-            //cout<<"TOTAi= "<<totAi<<endl;
+//            for (int i = 0; i <planePointsproj->points.size() ; ++i) {
+//                points.push_front(CGAL::Point_3<Ker> (planePointsproj->points[i].x,planePointsproj->points[i].y,planePointsproj->points[i].z));
+//            }
+//            CGAL::Delaunay_triangulation_3<Ker> dtprj(points.begin(),points.end());
+//            for (cit=dtprj.finite_cells_begin(); cit != dtprj.finite_cells_end() ; ++cit) {
+//                pcl::PointXYZRGB v1,v2,v3;
+//                CGAL::Point_3<Ker> p1(cit->vertex(0)->point()), p2(cit->vertex(1)->point()),p3(cit->vertex(2)->point());
+//                v1.x=p1.x(); v2.x=p2.x(); v3.x=p3.x();
+//                v1.y=p1.y(); v2.y=p2.y(); v3.y=p3.y();
+//                v1.z=p1.z(); v2.x=p2.z(); v3.x=p3.z();
 
-            //cout<<"!!!!!!!!!!!!!!!!!!!ROUGHNESS = "<<totAi/totA0<<endl;
-            cout<<"!!!!!!!!!!!!!!!!!!!ROUGHNESS DELAUNAY = "<<totAiDel/totA0Del<<endl;
+////                trfile2<<v1.x<<" "<<v1.y<<" "<<v1.z<<"\n";
+////                trfile2<<v2.x<<" "<<v2.y<<" "<<v2.z<<"\n";
+////                trfile2<<v3.x<<" "<<v3.y<<" "<<v3.z<<"\n";
 
-            r=totAiDel/totA0Del;
+//                totA0Del=totA0Del + ComputeArea(v1,v2,v3);
+//            }
+//            cout<<"totA0Del= "<<totA0Del<<endl;
+
+
+//            for (int l = 0; l <triangles2.polygons.size() ; ++l) {
+
+//                pcl::PointXYZRGB v1,v2,v3;
+
+
+//                //pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudtmp(new pcl::PointCloud<pcl::PointXYZRGB>);
+//                v1=planePointsproj->points[triangles2.polygons[l].vertices[0]];
+//                v2=planePointsproj->points[triangles2.polygons[l].vertices[1]];
+//                v3=planePointsproj->points[triangles2.polygons[l].vertices[2]];
+
+
+//                /*pcl::geometry::project(v1.getVector3fMap(),v2.getVector3fMap(),normtemp,v1v);
+//                pcl::geometry::project(v2.getVector3fMap(),v1.getVector3fMap(),normtemp,v2v);
+//                pcl::geometry::project(v3.getVector3fMap(),v2.getVector3fMap(),normtemp,v3v);
+//                v1n.x=v1v[0];
+//                v2n.y=v2v[1];
+//                v3n.z=v3v[2];
+//                //cout<<ComputeArea(v1,v2,v3)<<endl;
+//                //cout<<"ITERATION\n";
+//                //cout<<v1<<endl<<v2<<endl<<v3<<endl;
+
+
+//                totA0new=totA0new + ComputeArea(v1n, v2n, v3n);
+
+//                cout<<"--------------------------\n";
+//                cout<<ComputeArea(v1,v2,v3)<<endl;
+//                cout<<ComputeArea(v1n, v2n, v3n)<<endl;*/
+//                totA0=totA0 + ComputeArea(v1,v2,v3);
+
+
+//                //cout<<"SEE HERE "<<totA0<<endl;
+//                //cout<<"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+//            }
+
+
+//            //cout<<"TOTA0= "<<totA0<<endl;
+
+//            //cout<<"TOTAi= "<<totAi<<endl;
+
+//            //cout<<"!!!!!!!!!!!!!!!!!!!ROUGHNESS = "<<totAi/totA0<<endl;
+//            cout<<"!!!!!!!!!!!!!!!!!!!ROUGHNESS DELAUNAY = "<<totAiDel/totA0Del<<endl;
+
+//            r=totAiDel/totA0Del;
             double ms;
 
-            ms=MobilityScore(r,s);
+            t8=clock();
+
+            ms=MobilityScore(1,s);
 
             cout<<"Il mobilty score è "<<ms<<endl;
 
@@ -780,6 +806,8 @@ main(int argc, char** argv)
 
 
             }
+            t8=clock()-t8;
+            cout<<"Mapping for 1 takes "<<((float)t8)/CLOCKS_PER_SEC<<" secs"<<endl;
 
             //cv::imwrite("Map.jpg",prova);
 
@@ -788,6 +816,7 @@ main(int argc, char** argv)
 
             *cloudMap=*planePoints;
             int currentClusterNum = 2;
+            t7=clock();// perche' di regola non dovremmo calcolare slope e roughness del pavimento
             for (std::vector<pcl::PointIndices>::const_iterator i = clusters.begin(); i != clusters.end(); ++i)
             {
                 // ...add all its points to a new cloud...
@@ -1255,4 +1284,9 @@ main(int argc, char** argv)
 
         i++;
     }
+    t7=clock()-t7-t8*(numcl+1);
+    cout<<"Slope & roughness etimation takes "<<((float)t7)/CLOCKS_PER_SEC<<" secs"<<std::endl;
+
+    t=clock()-t;
+    cout<<"It took "<<((float)t)/CLOCKS_PER_SEC<<" secs"<<std::endl;
 }
