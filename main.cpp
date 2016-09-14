@@ -24,7 +24,7 @@
 #include <pcl/common/geometry.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Delaunay_triangulation_3.h>
-#include <pcl/range_image/range_image_planar.h>
+//#include <pcl/range_image/range_image_planar.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -34,6 +34,10 @@
 #include "dot.h"
 
 #include <time.h>
+//rangeImagePlanar.createFromPointCloudWithFixedSize(*tmp, imageSizeX, imageSizeY,
+//                                                   centerX, centerY, focalLengthX, focalLengthX,
+//                                                   sensorPose, pcl::RangeImage::CAMERA_FRAME,
+//                                                   noiseLevel, minimumRange);
 #include <math.h>
 #include <iostream>
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Ker;
@@ -117,12 +121,12 @@ main(int argc, char** argv)
         // Border size. If greater than 0, a border of "unobserved" points will be left
         // in the image when it is cropped.
         // Planar range image object.
-        pcl::RangeImagePlanar rangeImagePlanar;
+//        pcl::RangeImagePlanar rangeImagePlanar;
 
-        rangeImagePlanar.createFromPointCloudWithFixedSize(*tmp, imageSizeX, imageSizeY,
-                                                           centerX, centerY, focalLengthX, focalLengthX,
-                                                           sensorPose, pcl::RangeImage::CAMERA_FRAME,
-                                                           noiseLevel, minimumRange);
+//        rangeImagePlanar.createFromPointCloudWithFixedSize(*tmp, imageSizeX, imageSizeY,
+//                                                           centerX, centerY, focalLengthX, focalLengthX,
+//                                                           sensorPose, pcl::RangeImage::CAMERA_FRAME,
+//                                                           noiseLevel, minimumRange);
 
         if (cloud->isOrganized()) {
             prova = cv::Mat(cloud->height, cloud->width, CV_8UC3);
@@ -738,7 +742,9 @@ main(int argc, char** argv)
                 planePoints->points[i].g=255;
                 planePoints->points[i].b=0;
                 //cout<<i<<endl;
-                rangeImagePlanar.getImagePoint(planePoints->points[i].getVector3fMap(),y,x);
+                //rangeImagePlanar.getImagePoint(planePoints->points[i].getVector3fMap(),y,x);
+                y= centerX + focalLengthX*planePoints->points[i].x/planePoints->points[i].z;
+                x= centerY + focalLengthY*planePoints->points[i].y/planePoints->points[i].z;
                 if (!std::isnan(x) && !std::isnan(y)) {
                     //cout<<" \n"<<endl;
                     prova.at<cv::Vec3b>(x, y)[2] = 0;
@@ -1122,13 +1128,20 @@ main(int argc, char** argv)
                 else if(msc==0){
                     red=255;green=0;blue=0;}
 
-
+                ofstream outoff;
+                outoff.open("Offset.txt");
                 for (int i = 0; i <cluster->points.size(); ++i) {
                     //cout<<i<<endl;
                     cluster->points[i].r=red;
                     cluster->points[i].g=green;
                     cluster->points[i].b=0;
-                    rangeImagePlanar.getImagePoint(cluster->points[i].getVector3fMap(),y,x);
+//                    float x_pcl,y_pcl;
+//                    rangeImagePlanar.getImagePoint(cluster->points[i].getVector3fMap(),y_pcl,x_pcl);
+                    y= centerX + focalLengthX*cluster->points[i].x/cluster->points[i].z;
+                    x= centerY + focalLengthY*cluster->points[i].y/cluster->points[i].z;// giusto cosi' invertito anche se non so il xk
+
+//                    outoff<<"offsetx        offsety"<<endl;
+//                    outoff<<x-x_pcl<<" "<<y-y_pcl<<endl;
                     if (!std::isnan(x) && !std::isnan(y)) {
                         //cout<<" \n"<<endl;
                         //E' BGR
@@ -1261,7 +1274,7 @@ main(int argc, char** argv)
             fileNameim=/*"ob"+*/fileNameim+"BIG.png";
             pcl::io::savePCDFileASCII("Map"+namecloud, *cloudMap);
 
-            //cv::imwrite(fileNameim,prova);
+            cv::imwrite(fileNameim,prova);
 
 
 
