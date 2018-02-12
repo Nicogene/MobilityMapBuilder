@@ -1,9 +1,11 @@
-//
-// Created by nick on 23/06/15.
-//
+/*
+ * Copyright (C) 2018
+ * Authors: Nicolò Genesio
+ * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ */
 
 #include <iostream>
-#include "dot.h"
+#include <dot.h>
 
 double dot(std::vector<float>& u, std::vector<float>& v) {
 	double accum = 0.;

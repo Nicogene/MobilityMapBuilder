@@ -1,8 +1,10 @@
-//
-// Created by nick on 19/08/15.
-//
+/*
+ * Copyright (C) 2018
+ * Authors: Nicolò Genesio
+ * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ */
 
-#include "MobilityScore.h"
+#include <MobilityScore.h>
 #include <iostream>
 #include <stdio.h>
 

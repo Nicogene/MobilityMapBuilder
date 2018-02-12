@@ -1,6 +1,9 @@
-//
-// Created by nick on 23/06/15.
-//
+/*
+ * Copyright (C) 2018
+ * Authors: Nicolò Genesio
+ * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ */
+
 
 #ifndef PCL_PLANE_PROJECTION_COMPUTEAREA_H
 #define PCL_PLANE_PROJECTION_COMPUTEAREA_H

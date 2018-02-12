@@ -8,6 +8,8 @@ find_package(PCL 1.7 REQUIRED)
 
 find_package(OpenCV REQUIRED)
 
+find_package(YARP 2.3.73 REQUIRED)
+
 list(REMOVE_ITEM PCL_LIBRARIES "vtkproj4")
 
 #find_package(Eigen REQUIRED)
@@ -33,19 +35,23 @@ if ( CGAL_FOUND )
 
     include_directories( ${QT4_INCLUDE_DIR} )
     endif()
-    endif()
+endif()
 
-include_directories(${PCL_INCLUDE_DIRS}) #${EIGEN_INCLUDE_DIRS})
+include_directories(${PCL_INCLUDE_DIRS} ${YARP_INCLUDE_DIRS}) #${EIGEN_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
 set(PCL_BUILD_TYPE Release)
-file(GLOB Executable_SOURCES *.cpp)
-file(GLOB Executable_HEADERS *.h)
 
-add_executable(mobilityMapBuilder ${Executable_SOURCES})
+set(SOURCE_DIR ./src)
+set(INCLUDE_DIR ./include)
+include_directories(${SOURCE_DIR} ${INCLUDE_DIR})
+file(GLOB Executable_SOURCES ${SOURCE_DIR}/*.cpp)
+file(GLOB Executable_HEADERS ${INCLUDE_DIR}/*.h)
 
-target_link_libraries (mobilityMapBuilder ${PCL_LIBRARIES}${QT4_LIBRARIES} ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES} ${OpenCV_LIBS})
+add_executable(mobilityMapBuilder ${Executable_SOURCES} ${Executable_HEADERS})
+
+target_link_libraries (mobilityMapBuilder ${PCL_LIBRARIES}${QT4_LIBRARIES} ${YARP_LIBRARIES} ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES} ${OpenCV_LIBS} ${YARP_})
 
 if(${CMAKE_VERSION} VERSION_LESS 3.1)
   include(CheckCXXCompilerFlag)

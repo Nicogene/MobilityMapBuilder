@@ -1,9 +1,11 @@
-//
-// Created by nick on 23/06/15.
-//
+/*
+ * Copyright (C) 2018
+ * Authors: Nicolò Genesio
+ * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ */
 
 #include <iostream>
-#include "ComputeArea.h"
+#include <ComputeArea.h>
 
 using namespace std;
 using namespace pcl;

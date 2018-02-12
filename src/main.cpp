@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2018
+ * Authors: Nicolò Genesio
+ * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ */
+
 #include <pcl/io/pcd_io.h>
 #include <pcl/sample_consensus/method_types.h>
 #include <pcl/sample_consensus/model_types.h>
@@ -32,9 +38,9 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <cv.h>
-#include "MobilityScore.h"
-#include "ComputeArea.h"
-#include "dot.h"
+#include <MobilityScore.h>
+#include <ComputeArea.h>
+#include <dot.h>
 
 
 #include <iostream>
